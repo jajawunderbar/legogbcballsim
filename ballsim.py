@@ -9,7 +9,7 @@ stall_starts, stall_durs = [], []
 
 for i in range(num_mod):
     st.sidebar.subheader(f"Module {i+1}")
-    rates.append(st.sidebar.slider(f"Rate M{i+1} (balls/sec)", 0.1, 2.0, 0.5, 0.1, key=f"rate_{i}"))
+    rates.append(st.sidebar.slider(f"Rate M{i+1} (balls/sec)", 0.1, 2.0, 0.7, 0.1, key=f"rate_{i}"))
     inits.append(st.sidebar.number_input(f"Initial balls M{i+1}", min_value=0, value=20, key=f"init_{i}"))
     caps.append(st.sidebar.number_input(f"Capacity M{i+1}", min_value=1, value=30, key=f"cap_{i}"))
     dwells.append(st.sidebar.slider(f"Dwell time M{i+1} (s)", 0.0, 120.0, 2.0, 0.1, key=f"dwell_{i}"))
