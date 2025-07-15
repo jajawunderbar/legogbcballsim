@@ -10,7 +10,15 @@ inits = np.array([st.sidebar.number_input(f"Init balls M{i+1}", 0, 1000, 20) for
 caps  = np.array([st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30) for i in range(n)])
 T     = st.sidebar.number_input("Total time (s)", 10, 1000, 200)
 dt    = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1)
-rec_int = st.sidebar.number_input("Record every (s)", dt, T, 1.0)
+
+rec_int = st.sidebar.number_input(
+    "Record every (s)",
+    min_value=float(dt),
+    max_value=float(T),
+    value=1.0,
+    step=float(dt)
+)
+
 
 def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
     n = len(rates)
