@@ -5,13 +5,9 @@ import numpy as np
 # Sidebar: user inputs
 st.sidebar.header("Sim Loop")
 n = st.sidebar.number_input("Modules", min_value=1, value=10, step=1)
+initial_balls = st.sidebar.number_input("Init balls per module", min_value=0, value=20, step=1)
 T     = st.sidebar.number_input("Total time (s)", 10, 1000, 200)
 dt    = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1)
-rates = np.array([st.sidebar.slider(f"Rate M{i+1}", 0.1, 2.0, 0.7, 0.1) for i in range(n)])
-inits = np.array([st.sidebar.number_input(f"Init balls M{i+1}", 0, 1000, 20) for i in range(n)])
-caps  = np.array([st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30) for i in range(n)])
-
-
 rec_int = st.sidebar.number_input(
     "Record every (s)",
     min_value=float(dt),
@@ -20,20 +16,29 @@ rec_int = st.sidebar.number_input(
     step=float(dt)
 )
 
+rates = np.array([
+    st.sidebar.slider(f"Rate M{i+1}", 0.1, 2.0, 0.7, 0.1)
+    for i in range(n)
+])
+# use same init for all modules
+inits = np.full(n, initial_balls, dtype=float)
+caps  = np.array([
+    st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30, step=1)
+    for i in range(n)
+])
 
 def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
     n = len(rates)
     steps = int(T / dt) + 1
-    queues = inits.astype(float)
-    busy = np.zeros(n, bool)
-    rem = np.zeros(n, float)
+    queues = inits.copy()              # current buffers
+    busy   = np.zeros(n, bool)
+    rem    = np.zeros(n, float)
     t = 0.0
     next_rec = 0.0
-    times = []
-    data = []
+    times, data = [], []
 
     for _ in range(steps):
-        # complete and forward
+        # complete & forward
         rem[busy] -= dt
         done = np.where(busy & (rem <= 0))[0]
         for i in done:
@@ -49,10 +54,10 @@ def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
             j = (i + 1) % n
             if queues[j] < caps[j]:
                 queues[i] -= 1
-                busy[i] = True
-                rem[i] = 1.0 / rates[i]
+                busy[i]  = True
+                rem[i]   = 1.0 / rates[i]
 
-        # record state
+        # record at intervals
         if t >= next_rec - dt/2:
             times.append(t)
             data.append(queues.copy())
@@ -67,7 +72,7 @@ def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
 # Run simulation
 df = run_blocking_fast(rates, inits, caps, T, dt, rec_int)
 
-# Display
+# Display results
 st.subheader("Buffer Levels Over Time")
 st.line_chart(df.set_index("time"))
 st.subheader("Data Table")
