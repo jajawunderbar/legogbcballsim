@@ -6,9 +6,41 @@ import numpy as np
 st.sidebar.header("Sim Loop")
 n = st.sidebar.number_input("Modules", min_value=1, value=10, step=1)
 
+# per-module inputs
+rates = np.array([
+    st.sidebar.number_input(
+        f"Rate M{i+1} (balls/sec)",
+        min_value=0.0,
+        max_value=10.0,
+        value=0.700,
+        step=0.001,
+        format="%.3f"
+    )
+    for i in range(n)
+], dtype=float)
 
-T     = st.sidebar.number_input("Total time (s)", 10, 1000, 200)
-dt    = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1)
+inits = np.array([
+    st.sidebar.number_input(
+        f"Init balls M{i+1}",
+        min_value=0,
+        value=20,
+        step=1
+    )
+    for i in range(n)
+], dtype=float)
+
+caps = np.array([
+    st.sidebar.number_input(
+        f"Capacity M{i+1}",
+        min_value=1,
+        value=30,
+        step=1
+    )
+    for i in range(n)
+], dtype=float)
+
+T = st.sidebar.number_input("Total time (s)", 10, 1000, 200, step=10)
+dt = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1, step=0.01)
 rec_int = st.sidebar.number_input(
     "Record every (s)",
     min_value=float(dt),
@@ -17,19 +49,7 @@ rec_int = st.sidebar.number_input(
     step=float(dt)
 )
 
-rates = np.array([
-    st.sidebar.slider(f"Rate M{i+1}", 0.1, 2.0, 0.7, 0.1)
-    for i in range(n)
-])
-# use same init for all modules
-inits = np.array([
-    st.sidebar.number_input(f"Init balls M{i+1}", min_value=0, value=20, step=1)
-    for i in range(n)
-], dtype=float)
-caps  = np.array([
-    st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30, step=1)
-    for i in range(n)
-])
+
 
 def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
     n = len(rates)
@@ -75,7 +95,7 @@ def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
 
 # Run simulation
 df = run_blocking_fast(rates, inits, caps, T, dt, rec_int)
-# … nach dem Aufruf von run_blocking_fast …
+
 
 # compute time to empty / overflow
 times_empty    = {}
