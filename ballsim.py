@@ -3,13 +3,14 @@ import pandas as pd
 import numpy as np
 
 # Sidebar: user inputs
-st.sidebar.header("Blocking Loop (fast, supports 700+ modules)")
-n = st.sidebar.number_input("Modules", min_value=1, value=3, step=1)
-rates = np.array([st.sidebar.slider(f"Rate M{i+1}", 0.1, 2.0, 0.5, 0.1) for i in range(n)])
-inits = np.array([st.sidebar.number_input(f"Init balls M{i+1}", 0, 1000, 20) for i in range(n)])
-caps  = np.array([st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30) for i in range(n)])
+st.sidebar.header("Sim Loop")
+n = st.sidebar.number_input("Modules", min_value=1, value=10, step=1)
 T     = st.sidebar.number_input("Total time (s)", 10, 1000, 200)
 dt    = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1)
+rates = np.array([st.sidebar.slider(f"Rate M{i+1}", 0.1, 2.0, 0.7, 0.1) for i in range(n)])
+inits = np.array([st.sidebar.number_input(f"Init balls M{i+1}", 0, 1000, 20) for i in range(n)])
+caps  = np.array([st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30) for i in range(n)])
+
 
 rec_int = st.sidebar.number_input(
     "Record every (s)",
