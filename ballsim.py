@@ -3,8 +3,8 @@ import pandas as pd
 
 # Sidebar: parameters for blocking simulation
 st.sidebar.header("Blocking Loop Settings")
-n = st.sidebar.number_input("Modules", min_value=1, value=3, step=1)
-rates = [st.sidebar.slider(f"Rate M{i+1} (balls/sec)", 0.1, 2.0, 0.5, 0.1) for i in range(n)]
+n = st.sidebar.number_input("Modules", min_value=1, value=5, step=1)
+rates = [st.sidebar.slider(f"Rate M{i+1} (balls/sec)", 0.1, 2.0, 0.7, 0.1) for i in range(n)]
 inits = [st.sidebar.number_input(f"Init balls M{i+1}", min_value=0, value=20, step=1) for i in range(n)]
 caps  = [st.sidebar.number_input(f"Capacity M{i+1}", min_value=1, value=30, step=1) for i in range(n)]
 T     = st.sidebar.number_input("Sim time (s)", min_value=10, value=200, step=10)
