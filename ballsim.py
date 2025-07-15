@@ -5,7 +5,8 @@ import numpy as np
 # Sidebar: user inputs
 st.sidebar.header("Sim Loop")
 n = st.sidebar.number_input("Modules", min_value=1, value=10, step=1)
-initial_balls = st.sidebar.number_input("Init balls per module", min_value=0, value=20, step=1)
+
+
 T     = st.sidebar.number_input("Total time (s)", 10, 1000, 200)
 dt    = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1)
 rec_int = st.sidebar.number_input(
@@ -21,7 +22,10 @@ rates = np.array([
     for i in range(n)
 ])
 # use same init for all modules
-inits = np.full(n, initial_balls, dtype=float)
+inits = np.array([
+    st.sidebar.number_input(f"Init balls M{i+1}", min_value=0, value=20, step=1)
+    for i in range(n)
+], dtype=float)
 caps  = np.array([
     st.sidebar.number_input(f"Capacity M{i+1}", 1, 1000, 30, step=1)
     for i in range(n)
@@ -71,6 +75,30 @@ def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
 
 # Run simulation
 df = run_blocking_fast(rates, inits, caps, T, dt, rec_int)
+# … nach dem Aufruf von run_blocking_fast …
+
+# compute time to empty / overflow
+times_empty    = {}
+times_overflow = {}
+for i in range(n):
+    col  = f"M{i+1}"
+    cap  = caps[i]
+    ser  = df.set_index("time")[col]
+    # first time queue hits 0
+    empty = ser[ser <= 0].index
+    times_empty[col] = float(empty[0]) if len(empty) else None
+    # first time queue reaches capacity
+    ovf = ser[ser >= cap].index
+    times_overflow[col] = float(ovf[0]) if len(ovf) else None
+
+# show results
+st.subheader("Time to Empty / Overflow")
+res = pd.DataFrame({
+    "Module":      times_empty.keys(),
+    "Time Empty":  times_empty.values(),
+    "Time Overflow": times_overflow.values()
+})
+st.table(res)
 
 # Display results
 st.subheader("Buffer Levels Over Time")
