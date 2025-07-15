@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 st.sidebar.header("Loop Simulation Settings")
-num_mod = st.sidebar.number_input("Number of modules", min_value=1, value=10, step=1)
+num_mod = st.sidebar.number_input("Number of modules", min_value=1, value=5, step=1)
 
 rates, inits, caps, dwells = [], [], [], []
 stall_starts, stall_durs = [], []
@@ -16,7 +16,7 @@ for i in range(num_mod):
     stall_starts.append(st.sidebar.number_input(f"Stall start M{i+1} (s)", min_value=0.0, value=0.0, step=0.1, key=f"stall_start_{i}"))
     stall_durs.append(st.sidebar.number_input(f"Stall dur M{i+1} (s)", min_value=0.0, value=0.0, step=0.1, key=f"stall_dur_{i}"))
 
-T = st.sidebar.number_input("Total sim time (s)", min_value=10, value=1000)
+T = st.sidebar.number_input("Total sim time (s)", min_value=10, value=200)
 dt = st.sidebar.number_input("Time step (s)", min_value=0.01, value=0.1)
 
 def run_sim(rates, inits, caps, dwells, stall_starts, stall_durs, T, dt):
