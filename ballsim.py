@@ -39,7 +39,7 @@ caps = np.array([
     for i in range(n)
 ], dtype=float)
 
-T = st.sidebar.number_input("Total time (s)", 10, 1000, 200, step=10)
+T = st.sidebar.number_input("Total time (s)", 10, 100000, 200, step=10)
 dt = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1, step=0.01)
 rec_int = st.sidebar.number_input(
     "Record every (s)",
