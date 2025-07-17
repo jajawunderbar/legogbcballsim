@@ -7,14 +7,17 @@ n = st.sidebar.number_input("Number of modules", min_value=1, value=3, step=1)
 
 # 1. Rate als float mit 3 Nachkommastellen
 rates = np.array([
-    st.sidebar.number_input(
+    st.sidebar.slider(
         f"Rate M{i+1} (balls/sec)",
-        min_value=0.000, max_value=10.000,
-        value=0.700, step=0.001,
-        format="%.3f"
+        min_value=0.001,    # kleinster Wert
+        max_value=10.000,   # beliebig hoch
+        value=0.700,        # Default
+        step=0.001,         # jetzt kommen 0.714, 0.715, … an
+        format="%.3f"       # immer 3 Nachkommastellen anzeigen
     )
     for i in range(n)
 ], dtype=float)
+
 
 # 2. Initial-Bälle pro Modul
 inits = np.array([
