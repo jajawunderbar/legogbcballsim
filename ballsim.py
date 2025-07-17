@@ -36,7 +36,10 @@ caps = np.array([
 ], dtype=float)
 
 T      = st.sidebar.number_input("Total simulation time (s)",  10, 3600, 1200, step=10)
-dt     = st.sidebar.number_input("Time step (s)",            0.01,  1.0,  0.1, step=0.01)
+dt = st.sidebar.number_input(
+    "Time step (s)", 0.001, 1.0, 0.01, step=0.001, format="%.3f"
+)
+
 rec_int= st.sidebar.number_input("Record every (s)", float(dt), float(T), 1.0, step=float(dt))
 
 # Diskrete Blocking‑Simulation
