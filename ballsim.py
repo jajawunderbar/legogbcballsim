@@ -2,86 +2,72 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# Sidebar: user inputs
-st.sidebar.header("Sim Loop")
-n = st.sidebar.number_input("Modules", min_value=1, value=10, step=1)
+st.sidebar.header("Loop Simulation Settings")
+n = st.sidebar.number_input("Number of modules", min_value=1, value=3, step=1)
 
-# per-module inputs
+# 1. Rate als float mit 3 Nachkommastellen
 rates = np.array([
     st.sidebar.number_input(
         f"Rate M{i+1} (balls/sec)",
-        min_value=0.0,
-        max_value=10.0,
-        value=0.700,
-        step=0.001,
+        min_value=0.000, max_value=10.000,
+        value=0.700, step=0.001,
         format="%.3f"
     )
     for i in range(n)
 ], dtype=float)
 
+# 2. Initial-Bälle pro Modul
 inits = np.array([
     st.sidebar.number_input(
-        f"Init balls M{i+1}",
-        min_value=0,
-        value=20,
-        step=1
+        f"Init balls M{i+1}", min_value=0, value=20, step=1
     )
     for i in range(n)
 ], dtype=float)
 
+# 3. Kapazität pro Modul
 caps = np.array([
     st.sidebar.number_input(
-        f"Capacity M{i+1}",
-        min_value=1,
-        value=30,
-        step=1
+        f"Capacity M{i+1}", min_value=1, value=30, step=1
     )
     for i in range(n)
 ], dtype=float)
 
-T = st.sidebar.number_input("Total time (s)", 10, 100000, 200, step=10)
-dt = st.sidebar.number_input("Time step (s)", 0.01, 1.0, 0.1, step=0.01)
-rec_int = st.sidebar.number_input(
-    "Record every (s)",
-    min_value=float(dt),
-    max_value=float(T),
-    value=1.0,
-    step=float(dt)
-)
+T      = st.sidebar.number_input("Total simulation time (s)",  10, 3600, 1200, step=10)
+dt     = st.sidebar.number_input("Time step (s)",            0.01,  1.0,  0.1, step=0.01)
+rec_int= st.sidebar.number_input("Record every (s)", float(dt), float(T), 1.0, step=float(dt))
 
-
-
-def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
+# Diskrete Blocking‑Simulation
+def run_blocking(rates, inits, caps, T, dt, rec_int):
     n = len(rates)
-    steps = int(T / dt) + 1
-    queues = inits.copy()              # current buffers
-    busy   = np.zeros(n, bool)
+    queues = inits.copy()       # aktueller Pufferstand
+    busy   = np.zeros(n, bool) 
     rem    = np.zeros(n, float)
     t = 0.0
     next_rec = 0.0
     times, data = [], []
 
+    steps = int(T/dt) + 1
     for _ in range(steps):
-        # complete & forward
+        # 1) Abschlüsse & Weitergabe
         rem[busy] -= dt
         done = np.where(busy & (rem <= 0))[0]
         for i in done:
-            j = (i + 1) % n
+            j = (i+1) % n
             if queues[j] < caps[j]:
                 queues[j] += 1
                 busy[i] = False
-                rem[i] = 0.0
+                rem[i]  = 0.0
 
-        # start new service
+        # 2) Starte neuen Ball, wenn möglich
         can_start = (~busy) & (queues > 0)
         for i in np.where(can_start)[0]:
-            j = (i + 1) % n
+            j = (i+1) % n
             if queues[j] < caps[j]:
                 queues[i] -= 1
-                busy[i]  = True
-                rem[i]   = 1.0 / rates[i]
+                busy[i]    = True
+                rem[i]     = 1.0 / rates[i]  # keine Rundung!
 
-        # record at intervals
+        # 3) Aufzeichnen
         if t >= next_rec - dt/2:
             times.append(t)
             data.append(queues.copy())
@@ -93,35 +79,25 @@ def run_blocking_fast(rates, inits, caps, T, dt, rec_int):
     df.insert(0, "time", times)
     return df
 
-# Run simulation
-df = run_blocking_fast(rates, inits, caps, T, dt, rec_int)
+df = run_blocking(rates, inits, caps, T, dt, rec_int)
 
-
-# compute time to empty / overflow
-times_empty    = {}
-times_overflow = {}
-for i in range(n):
-    col  = f"M{i+1}"
-    cap  = caps[i]
-    ser  = df.set_index("time")[col]
-    # first time queue hits 0
-    empty = ser[ser <= 0].index
-    times_empty[col] = float(empty[0]) if len(empty) else None
-    # first time queue reaches capacity
-    ovf = ser[ser >= cap].index
-    times_overflow[col] = float(ovf[0]) if len(ovf) else None
-
-# show results
-st.subheader("Time to Empty / Overflow")
-res = pd.DataFrame({
-    "Module":      times_empty.keys(),
-    "Time Empty":  times_empty.values(),
-    "Time Overflow": times_overflow.values()
-})
-st.table(res)
-
-# Display results
 st.subheader("Buffer Levels Over Time")
 st.line_chart(df.set_index("time"))
-st.subheader("Data Table")
-st.dataframe(df, height=400)
+
+st.subheader("Time to Empty Each Module")
+empty_times = []
+for i in range(n):
+    col = f"M{i+1}"
+    # suche ersten Zeitpunkt, an dem <= 0
+    mask = df[col] <= 0
+    if mask.any():
+        # index in df entspricht append-Reihenfolge
+        empty_times.append(df.loc[mask, "time"].iloc[0])
+    else:
+        empty_times.append(None)
+
+res = pd.DataFrame({
+    "Module": [f"M{i+1}" for i in range(n)],
+    "Time to empty (s)": empty_times
+})
+st.table(res)
